@@ -1,0 +1,4 @@
+github.com/bytearena/ecs v1.0.0 h1:azwCN52dJZz2KwPoyqU4s1MMw9J9rD+65B30D4qVSj4=
+github.com/bytearena/ecs v1.0.0/go.mod h1:RDqayRmo2imxvASJif+btnZpjbMovNlsBTctJv5dWRQ=
+github.com/google/uuid v1.1.5 h1:kxhtnfFVi+rYdOALN0B3k9UT86zVJKfBimRaciULW4I=
+github.com/google/uuid v1.1.5/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
