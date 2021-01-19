@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"tostanie.com/globalworld/ecs"
 )
 
 type Walk struct {
@@ -18,7 +16,5 @@ type Talk struct {
 
 func main() {
 	fmt.Println("Hello, 世界")
-
-	manager := ecs.Manager{}
 
 }

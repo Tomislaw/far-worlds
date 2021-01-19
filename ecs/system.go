@@ -15,16 +15,6 @@ type System interface {
 	Remove(e Entity)
 }
 
-// SystemAddByInterfacer is a system that also implements the AddByInterface method
-type SystemAddByInterfacer interface {
-	System
-
-	// AddByInterface allows you to automatically add entities based on the
-	// interfaces that the entity implements. It should add the entity passed
-	// as o to the system after casting it to the correct interface.
-	AddByInterface(o Identifier)
-}
-
 // Prioritizer specifies the priority of systems.
 type Prioritizer interface {
 	// Priority indicates the order in which Systems should be executed per

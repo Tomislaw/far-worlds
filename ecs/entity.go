@@ -33,19 +33,20 @@ type IdentifierSlice []Identifier
 
 // NewEntity creates a new Entity with a new unique identifier. It is safe for
 // concurrent use.
-func NewEntity() Entity {
-	return Entity{id: atomic.AddUint64(&idInc, 1)}
+func NewEntity(manager *Manager) Entity {
+	return Entity{id: atomic.AddUint64(&idInc, 1), manager: manager}
 }
 
 // NewEntities creates an amount of new entities with a new unique identifiers. It
 // is safe for concurrent use, and performs better than NewBasic for large
 // numbers of entities.
-func NewEntities(amount int) []Entity {
+func NewEntities(manager *Manager, amount int) []Entity {
 	entities := make([]Entity, amount)
 
 	lastID := atomic.AddUint64(&idInc, uint64(amount))
 	for i := 0; i < amount; i++ {
 		entities[i].id = lastID - uint64(amount) + uint64(i) + 1
+		entities[i].manager = manager
 	}
 
 	return entities
@@ -138,3 +139,5 @@ func (is IdentifierSlice) Swap(i, j int) {
 type Face interface {
 	GetEntity() *Entity
 }
+
+type entites []*Entity
