@@ -10,7 +10,7 @@ type commandBuffer struct {
 	componentsToDestroy sync.Pool // component
 
 	entitesToAdd     sync.Pool // *Entity
-	entitesToDestroy sync.Pool // uint64
+	entitesToDestroy sync.Pool // *Entity
 
 }
 
@@ -21,7 +21,7 @@ type component struct {
 }
 
 func (b *commandBuffer) removeEntity(e *Entity) {
-	b.entitesToDestroy.Put(e.id)
+	b.entitesToDestroy.Put(e)
 	for _, item := range e.GetComponentsTypes() {
 		b.removeComponent(e, item)
 	}
@@ -36,31 +36,53 @@ func (b *commandBuffer) removeComponent(e *Entity, t reflect.Type) {
 }
 
 func (b *commandBuffer) addComponent(e *Entity, c *interface{}) {
-	b.entitesToAdd.Put(component{reflectType: reflect.TypeOf(c), entityID: e.id, data: c})
+	b.componentsToAdd.Put(component{reflectType: reflect.TypeOf(c), entityID: e.id, data: c})
 }
 
-func (b *commandBuffer) resolveEntites(entites entites) (resolvedEntites entites) {
+func (b *commandBuffer) resolveEntites(entites entites) {
 
 	for {
-		entity := b.entitesToAdd.Get().(*Entity)
-		if entity == nil {
+		e := b.entitesToDestroy.Get()
+		if e == nil {
 			break
 		}
+		entityToRemove := e.(*Entity)
+		entites[entityToRemove.id] = nil
+	}
 
-		entites = append(resolvedEntites, entity)
+	for {
+		e := b.entitesToAdd.Get()
+		if e == nil {
+			break
+		}
+		entityToAdd := e.(*Entity)
+
+		entites[entityToAdd.id] = entityToAdd
 	}
 	return
 }
 
-func (b *commandBuffer) resolveComponents(entites entites) (resolvedEntites entites) {
+func (b *commandBuffer) resolveComponents(components components) {
 
 	for {
-		entity := b.entitesToAdd.Get().(*Entity)
-		if entity == nil {
+		c := b.componentsToDestroy.Get()
+		if c == nil {
 			break
 		}
+		componentToRemove := c.(component)
+		components[componentToRemove.reflectType].data[componentToRemove.entityID] = nil
+	}
 
-		entites = append(resolvedEntites, entity)
+	for {
+		c := b.componentsToAdd.Get()
+		if c == nil {
+			break
+		}
+		componentToAdd := c.(component)
+		componentData := components[componentToAdd.reflectType]
+		componentData.data[componentToAdd.entityID] = componentToAdd.data
+		//componentdata.
+		//.data[componentToAdd.entityID] = componentToAdd.data
 	}
 	return
 }

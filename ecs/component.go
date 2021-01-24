@@ -27,10 +27,22 @@ func (entity *Entity) AddComponent(component interface{}) *Entity {
 		return entity
 	}
 
-	ctype.datalock.Lock()
-	ctype.data[entity.id] = &component
+	entity.manager.commandBuffer.addComponent(entity, &component)
 	entity.componentFlags |= 1 << ctype.id
-	ctype.datalock.Unlock()
+
+	return entity
+}
+
+//
+func (entity *Entity) RemoveComponent(typeof reflect.Type) *Entity {
+	ctype := entity.manager.GetComponentType(typeof)
+
+	if ctype == nil {
+		return entity
+	}
+
+	entity.manager.commandBuffer.removeComponent(entity, typeof)
+	entity.componentFlags &= ^(1 << ctype.id)
 	return entity
 }
 

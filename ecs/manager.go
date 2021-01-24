@@ -20,6 +20,14 @@ type Manager struct {
 	entites    entites
 }
 
+func NewManager() *Manager {
+	return &Manager{
+		systems:    make([]System, 0),
+		components: make(map[reflect.Type]*Component, 64),
+		entites:    make(map[uint64]*Entity, 1000),
+	}
+}
+
 // GetComponentType returns component type
 func (w *Manager) GetComponentType(componentType reflect.Type) *Component {
 
@@ -31,9 +39,9 @@ func (w *Manager) GetComponentType(componentType reflect.Type) *Component {
 	return nil
 }
 
-// RegisterComponentsType registers type of struct which can be later added later to entities
+// RegisterComponent registers type of struct which can be later added later to entities
 // Can't be used async
-func (w *Manager) RegisterComponentsType(componentType reflect.Type) *Manager {
+func (w *Manager) RegisterComponent(componentType reflect.Type) *Manager {
 
 	_, ok := w.components[componentType]
 
@@ -48,17 +56,18 @@ func (w *Manager) RegisterComponentsType(componentType reflect.Type) *Manager {
 	newType := &Component{
 		id:       uint8(w.components.Len()),
 		datalock: &sync.RWMutex{},
+		data:     make(map[uint64]*interface{}),
 	}
 
 	w.components[componentType] = newType
 	return w
 }
 
-// RegisterComponentsTypes todo
-func (w *Manager) RegisterComponentsTypes(componentTypes ...reflect.Type) *Manager {
+// RegisterComponents todo
+func (w *Manager) RegisterComponents(componentTypes ...reflect.Type) *Manager {
 
 	for _, component := range componentTypes {
-		w.RegisterComponentsType(component)
+		w.RegisterComponent(component)
 	}
 	return w
 }
@@ -96,14 +105,21 @@ func (w *Manager) Systems() []System {
 // Update updates each System managed by the World. It is invoked by the engine
 // once every frame, with dt being the duration since the previous update.
 func (w *Manager) Update(dt float32) {
+	w.commandBuffer.resolveComponents(w.components)
+	w.commandBuffer.resolveEntites(w.entites)
 	for _, system := range w.Systems() {
 		system.Update(dt)
 	}
 }
 
 // RemoveEntity removes the entity across all systems.
-func (w *Manager) RemoveEntity(e Entity) {
-	for _, sys := range w.systems {
-		sys.Remove(e)
+func (w *Manager) RemoveEntity(e *Entity) {
+	w.commandBuffer.removeEntity(e)
+}
+
+func (w *Manager) RemoveEntityWithId(id uint64) {
+	entity, ok := w.entites[id]
+	if ok {
+		w.commandBuffer.removeEntity(entity)
 	}
 }

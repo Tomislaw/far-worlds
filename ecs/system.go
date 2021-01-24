@@ -12,7 +12,7 @@ type System interface {
 	Update(dt float32)
 
 	// Remove removes the given entity from the system.
-	Remove(e Entity)
+	Remove(e *Entity)
 }
 
 // Prioritizer specifies the priority of systems.

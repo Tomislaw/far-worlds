@@ -33,18 +33,19 @@ type IdentifierSlice []Identifier
 
 // NewEntity creates a new Entity with a new unique identifier. It is safe for
 // concurrent use.
-func NewEntity(manager *Manager) Entity {
-	return Entity{id: atomic.AddUint64(&idInc, 1), manager: manager}
+func NewEntity(manager *Manager) *Entity {
+	return &Entity{id: atomic.AddUint64(&idInc, 1), manager: manager}
 }
 
 // NewEntities creates an amount of new entities with a new unique identifiers. It
 // is safe for concurrent use, and performs better than NewBasic for large
 // numbers of entities.
-func NewEntities(manager *Manager, amount int) []Entity {
-	entities := make([]Entity, amount)
+func NewEntities(manager *Manager, amount int) []*Entity {
+	entities := make([]*Entity, amount)
 
 	lastID := atomic.AddUint64(&idInc, uint64(amount))
 	for i := 0; i < amount; i++ {
+		entities[i] = &Entity{}
 		entities[i].id = lastID - uint64(amount) + uint64(i) + 1
 		entities[i].manager = manager
 	}
@@ -93,12 +94,18 @@ func (e *Entity) Children() []Entity {
 	return ret
 }
 
-// var visited map[uint64]struct{}
-// var descs []*BasicEntity
-
 // Descendents returns the children and their children all the way down the tree.
 func (e *Entity) Descendents() []Entity {
 	return descendents([]Entity{}, e, e)
+}
+
+func (e *Entity) Remove() {
+	e.manager.commandBuffer.removeEntity(e)
+}
+
+func (e *Entity) Register() *Entity {
+	e.manager.commandBuffer.addEntity(e)
+	return e
 }
 
 func descendents(in []Entity, this, top *Entity) []Entity {
@@ -140,4 +147,4 @@ type Face interface {
 	GetEntity() *Entity
 }
 
-type entites []*Entity
+type entites map[uint64]*Entity
