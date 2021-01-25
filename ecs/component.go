@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -38,6 +39,7 @@ func (entity *Entity) RemoveComponent(typeof reflect.Type) *Entity {
 	ctype := entity.manager.GetComponentType(typeof)
 
 	if ctype == nil {
+		fmt.Printf("Trying to add unregistered component %v\n", typeof)
 		return entity
 	}
 

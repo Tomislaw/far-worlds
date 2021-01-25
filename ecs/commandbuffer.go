@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -36,10 +37,22 @@ func (b *commandBuffer) removeComponent(e *Entity, t reflect.Type) {
 }
 
 func (b *commandBuffer) addComponent(e *Entity, c *interface{}) {
-	b.componentsToAdd.Put(component{reflectType: reflect.TypeOf(c), entityID: e.id, data: c})
+
+	ctype := reflect.TypeOf(reflect.ValueOf(c).Elem().Interface())
+	b.componentsToAdd.Put(component{reflectType: ctype, entityID: e.id, data: c})
 }
 
 func (b *commandBuffer) resolveEntites(entites entites) {
+
+	for {
+		e := b.entitesToAdd.Get()
+		if e == nil {
+			break
+		}
+		entityToAdd := e.(*Entity)
+		entites[entityToAdd.id] = entityToAdd
+		fmt.Printf("Entity added - id: %v\n", entityToAdd.id)
+	}
 
 	for {
 		e := b.entitesToDestroy.Get()
@@ -48,30 +61,12 @@ func (b *commandBuffer) resolveEntites(entites entites) {
 		}
 		entityToRemove := e.(*Entity)
 		entites[entityToRemove.id] = nil
-	}
-
-	for {
-		e := b.entitesToAdd.Get()
-		if e == nil {
-			break
-		}
-		entityToAdd := e.(*Entity)
-
-		entites[entityToAdd.id] = entityToAdd
+		fmt.Printf("Entity removed - id: %v\n", entityToRemove.id)
 	}
 	return
 }
 
 func (b *commandBuffer) resolveComponents(components components) {
-
-	for {
-		c := b.componentsToDestroy.Get()
-		if c == nil {
-			break
-		}
-		componentToRemove := c.(component)
-		components[componentToRemove.reflectType].data[componentToRemove.entityID] = nil
-	}
 
 	for {
 		c := b.componentsToAdd.Get()
@@ -81,8 +76,19 @@ func (b *commandBuffer) resolveComponents(components components) {
 		componentToAdd := c.(component)
 		componentData := components[componentToAdd.reflectType]
 		componentData.data[componentToAdd.entityID] = componentToAdd.data
+		fmt.Printf("Component added to entity: %v, type: %v\n", componentToAdd.entityID, componentToAdd.reflectType)
 		//componentdata.
 		//.data[componentToAdd.entityID] = componentToAdd.data
+	}
+
+	for {
+		c := b.componentsToDestroy.Get()
+		if c == nil {
+			break
+		}
+		componentToRemove := c.(component)
+		components[componentToRemove.reflectType].data[componentToRemove.entityID] = nil
+		fmt.Printf("Component removed - entity: %v, type: %v\n", componentToRemove.entityID, componentToRemove.reflectType)
 	}
 	return
 }
